@@ -1,6 +1,7 @@
 package com.example.coopbatchprocess.entity;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 public class Transacao {
 
@@ -8,6 +9,8 @@ public class Transacao {
 	private String cliente;
 	private BigDecimal valor;
 	private String tipo;
+	private boolean suspeita;
+	private LocalDateTime dataProcessamento;
 
 	public String getConta() {
 		return conta;
@@ -39,5 +42,21 @@ public class Transacao {
 
 	public void setTipo(String tipo) {
 		this.tipo = tipo;
+	}
+
+	public boolean isSuspeita() {
+		return suspeita;
+	}
+
+	public void setSuspeita(boolean suspeita) {
+		this.suspeita = suspeita;
+	}
+
+	public LocalDateTime getDataProcessamento() {
+		return dataProcessamento;
+	}
+
+	public void setDataProcessamento(LocalDateTime dataProcessamento) {
+		this.dataProcessamento = dataProcessamento;
 	}
 }
