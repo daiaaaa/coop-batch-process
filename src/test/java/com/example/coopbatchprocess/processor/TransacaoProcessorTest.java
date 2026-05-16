@@ -3,12 +3,21 @@ package com.example.coopbatchprocess.processor;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.coopbatchprocess.entity.Transacao;
+import com.example.coopbatchprocess.service.AuditoriaService;
 import java.math.BigDecimal;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class TransacaoProcessorTest {
 
-	private final TransacaoProcessor processor = new TransacaoProcessor();
+	private AuditoriaService auditoriaService;
+	private TransacaoProcessor processor;
+
+	@BeforeEach
+	void setUp() {
+		auditoriaService = new AuditoriaService();
+		processor = new TransacaoProcessor(auditoriaService);
+	}
 
 	@Test
 	void deveMarcarSaqueSuspeito() {
@@ -17,6 +26,8 @@ class TransacaoProcessorTest {
 		assertThat(resultado).isNotNull();
 		assertThat(resultado.isSuspeita()).isTrue();
 		assertThat(resultado.getDataProcessamento()).isNotNull();
+		assertThat(auditoriaService.getTotalProcessado()).isEqualTo(1);
+		assertThat(auditoriaService.getTotalSuspeito()).isEqualTo(1);
 	}
 
 	@Test
@@ -29,6 +40,8 @@ class TransacaoProcessorTest {
 		assertThat(resultado.getValor()).isEqualByComparingTo(new BigDecimal("500"));
 		assertThat(resultado.getTipo()).isEqualTo("DEPOSITO");
 		assertThat(resultado.getDataProcessamento()).isNotNull();
+		assertThat(auditoriaService.getTotalProcessado()).isEqualTo(1);
+		assertThat(auditoriaService.getTotalSuspeito()).isZero();
 	}
 
 	@Test
@@ -36,6 +49,8 @@ class TransacaoProcessorTest {
 		Transacao resultado = processor.process(transacao("1004", "Joao", "0", "DEPOSITO"));
 
 		assertThat(resultado).isNull();
+		assertThat(auditoriaService.getTotalProcessado()).isEqualTo(1);
+		assertThat(auditoriaService.getTotalInvalido()).isEqualTo(1);
 	}
 
 	@Test
@@ -43,6 +58,8 @@ class TransacaoProcessorTest {
 		Transacao resultado = processor.process(transacao("1005", "Bia", "100", "PIX_DO_NADA"));
 
 		assertThat(resultado).isNull();
+		assertThat(auditoriaService.getTotalProcessado()).isEqualTo(1);
+		assertThat(auditoriaService.getTotalInvalido()).isEqualTo(1);
 	}
 
 	private Transacao transacao(String conta, String cliente, String valor, String tipo) {

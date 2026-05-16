@@ -1,6 +1,7 @@
 package com.example.coopbatchprocess.processor;
 
 import com.example.coopbatchprocess.entity.Transacao;
+import com.example.coopbatchprocess.service.AuditoriaService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
@@ -11,15 +12,33 @@ public class TransacaoProcessor implements ItemProcessor<Transacao, Transacao> {
 
 	private static final BigDecimal LIMITE_SAQUE_SUSPEITO = new BigDecimal("5000");
 
+	private final AuditoriaService auditoriaService;
+
+	public TransacaoProcessor(AuditoriaService auditoriaService) {
+		this.auditoriaService = auditoriaService;
+	}
+
 	@Override
 	public Transacao process(Transacao transacao) {
-		if (valorInvalido(transacao) || tipoInvalido(transacao)) {
+		auditoriaService.registrarProcessamento(transacao);
+
+		if (valorInvalido(transacao)) {
+			auditoriaService.registrarInvalida(transacao, "Valor invalido");
+			return null;
+		}
+
+		if (tipoInvalido(transacao)) {
+			auditoriaService.registrarInvalida(transacao, "Tipo invalido");
 			return null;
 		}
 
 		TipoTransacao tipo = TipoTransacao.valueOf(transacao.getTipo());
 		transacao.setSuspeita(ehSaqueSuspeito(transacao, tipo));
 		transacao.setDataProcessamento(LocalDateTime.now());
+
+		if (transacao.isSuspeita()) {
+			auditoriaService.registrarSuspeita(transacao);
+		}
 
 		return transacao;
 	}
